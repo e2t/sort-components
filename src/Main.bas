@@ -17,31 +17,21 @@ Sub Main()
     If Not currentDoc Is Nothing Then
         If currentDoc.GetType = swDocASSEMBLY Then
             Set components = New Dictionary
-            'Set selMgr = currentDoc.SelectionManager
-            'selCount = selMgr.GetSelectedObjectCount2(-1)
-            'If selCount > 0 Then
-            '    For i = 1 To selCount
-            '        Set comp = selMgr.GetSelectedObjectsComponent4(i, -1)
-            '        If Not comp Is Nothing Then
-            '            AddComponent components, comp
-            '        End If
-            '    Next
-            '    ReorderComponents currentDoc, components
-            'Else
-                Set feat = currentDoc.FirstFeature
-                Do Until feat Is Nothing
-                    Select Case feat.GetTypeName
-                        Case "Reference"
-                            Set comp = feat.GetSpecificFeature2
+            Set feat = currentDoc.FirstFeature
+            Do Until feat Is Nothing
+                Select Case feat.GetTypeName
+                    Case "Reference"
+                        Set comp = feat.GetSpecificFeature2
+                        If Not comp.GetModelDoc2 Is Nothing Then 'supressed ignored
                             AddComponent components, comp
-                        Case "FtrFolder"
-                            ReorderComponents currentDoc, components
-                            components.RemoveAll
-                    End Select
-                    Set feat = feat.GetNextFeature
-                Loop
-                ReorderComponents currentDoc, components
-            'End If
+                        End If
+                    Case "FtrFolder"
+                        ReorderComponents currentDoc, components
+                        components.RemoveAll
+                End Select
+                Set feat = feat.GetNextFeature
+            Loop
+            ReorderComponents currentDoc, components
         End If
     End If
 End Sub
@@ -95,7 +85,7 @@ Function SortAsmAndParts(components As Dictionary) As String()
     j = -1
     If asmCount >= 0 Then
         ReDim Preserve assemblies(asmCount)
-        assemblies = BubbleSort(assemblies)
+        SortArray assemblies
         For asmCount = LBound(assemblies) To UBound(assemblies)
             j = j + 1
             res(j) = assemblies(asmCount)
@@ -103,7 +93,7 @@ Function SortAsmAndParts(components As Dictionary) As String()
     End If
     If partCount >= 0 Then
         ReDim Preserve parts(partCount)
-        parts = BubbleSort(parts)
+        SortArray parts
         For partCount = LBound(parts) To UBound(parts)
             j = j + 1
             res(j) = parts(partCount)
@@ -122,30 +112,38 @@ Sub ReorderComponents(currentAsm As AssemblyDoc, components As Dictionary)
     Next
 End Sub
 
-Function BubbleSort(ByVal arr As Variant) As Variant
-    Dim i As Integer
-    Dim j As Integer
+Sub SortArray(ByRef arr As Variant)
+    QuickSort arr, LBound(arr), UBound(arr)
+End Sub
+
+Sub QuickSort(ByRef arr As Variant, lowerBound As Integer, upperBound As Integer)
+    Dim pivot As Variant
+    Dim low As Integer
+    Dim high As Integer
     Dim tmp As Variant
-    Dim needSort As Boolean
-    Dim lowIndex As Integer
-    Dim upIndex As Integer
-    
-    lowIndex = LBound(arr)
-    upIndex = UBound(arr) - 1
-    
-    needSort = True
-    i = lowIndex
-    While i <= upIndex And needSort
-        needSort = False
-        For j = lowIndex To upIndex - i
-            If arr(j) > arr(j + 1) Then
-                tmp = arr(j)
-                arr(j) = arr(j + 1)
-                arr(j + 1) = tmp
-                needSort = True
-            End If
-        Next
-        i = i + 1
+
+    If upperBound <= lowerBound Then Exit Sub
+
+    pivot = arr(lowerBound / 2 + upperBound / 2)
+    low = lowerBound
+    high = upperBound
+
+    While low <= high
+        While arr(low) < pivot And low < upperBound
+            low = low + 1
+        Wend
+        While pivot < arr(high) And high > lowerBound
+            high = high - 1
+        Wend
+        If low <= high Then
+            tmp = arr(low)
+            arr(low) = arr(high)
+            arr(high) = tmp
+            low = low + 1
+            high = high - 1
+        End If
     Wend
-    BubbleSort = arr
-End Function
+
+    QuickSort arr, lowerBound, high
+    QuickSort arr, low, upperBound
+End Sub
