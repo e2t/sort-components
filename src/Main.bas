@@ -124,7 +124,7 @@ Sub QuickSort(ByRef arr As Variant, lowerBound As Integer, upperBound As Integer
 
     If upperBound <= lowerBound Then Exit Sub
 
-    pivot = arr(lowerBound / 2 + upperBound / 2)
+    pivot = arr(lowerBound \ 2 + upperBound \ 2)
     low = lowerBound
     high = upperBound
 
