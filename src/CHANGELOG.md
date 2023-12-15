@@ -3,6 +3,12 @@
 [//]: # (YYYY-MM-DD)
 [//]: # (Added, Changed, Deprecated, Removed, Fixed, Security)
 
+## [23.1.1] 2023-12-15
+
+### Fixed
+
+- Виправлено збій.
+
 ## [23.1] 2023-12-15
 
 ### Changed

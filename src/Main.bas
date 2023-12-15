@@ -104,8 +104,10 @@ End Function
 Sub ReorderComponents(currentAsm As AssemblyDoc, components As Dictionary)
     Dim SortedComps As Variant
     
-    SortedComps = SortAsmAndParts2(components)
-    currentAsm.ReorderComponents SortedComps, SortedComps(0), swReorderComponents_FirstInFolder
+    If components.Count > 0 Then
+        SortedComps = SortAsmAndParts2(components)
+        currentAsm.ReorderComponents SortedComps, SortedComps(0), swReorderComponents_FirstInFolder
+    End If
 End Sub
 
 Sub SortArray(ByRef arr As Variant)
