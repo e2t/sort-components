@@ -7,8 +7,8 @@ Sub Main()
     Dim currentDoc As ModelDoc2
     Dim selMgr As SelectionMgr
     Dim selCount As Integer
-    Dim comp As Component2
-    Dim i As Integer
+    Dim Comp As Component2
+    Dim I As Integer
     Dim components As Dictionary
     Dim feat As Feature
      
@@ -21,9 +21,9 @@ Sub Main()
             Do Until feat Is Nothing
                 Select Case feat.GetTypeName
                     Case "Reference"
-                        Set comp = feat.GetSpecificFeature2
-                        If Not comp.GetModelDoc2 Is Nothing Then 'supressed ignored
-                            AddComponent components, comp
+                        Set Comp = feat.GetSpecificFeature2
+                        If Not Comp.GetModelDoc2 Is Nothing Then 'supressed ignored
+                            AddComponent components, Comp
                         End If
                     Case "FtrFolder"
                         ReorderComponents currentDoc, components
@@ -36,16 +36,17 @@ Sub Main()
     End If
 End Sub
 
-Sub AddComponent(ByRef components As Dictionary, comp As Component2)
+Sub AddComponent(ByRef components As Dictionary, Comp As Component2)
     Dim compName As String
     Dim posMinus As Integer
     Dim key As String
-    Dim doc As ModelDoc2
+    Dim Doc As ModelDoc2
     
-    compName = comp.Name2
+    compName = Comp.Name2
     posMinus = InStrRev(compName, "-")
-    key = BaseFilename(comp.GetPathName) & "@" & comp.ReferencedConfiguration & "@" & Right(compName, Len(compName) - posMinus)
-    components.Add key, comp
+    key = BaseFilename(Comp.GetPathName) & "@" & Comp.ReferencedConfiguration & "@" _
+        & Right(compName, Len(compName) - posMinus)
+    components.Add key, Comp
 End Sub
 
 Function BaseFilename(pathname As String) As String
@@ -55,95 +56,59 @@ Function BaseFilename(pathname As String) As String
     BaseFilename = Right(pathname, Len(pathname) - posSep)
 End Function
 
-Function SortAsmAndParts(components As Dictionary) As String()
-    Dim res() As String
-    Dim assemblies() As String
-    Dim parts() As String
-    Dim asmCount As Integer
-    Dim partCount As Integer
-    Dim i As Variant
-    Dim comp As Component2
-    Dim doc As ModelDoc2
-    Dim j As Integer
+Function SortAsmAndParts2(components As Dictionary) As Component2()
+    Dim AsmArray() As String
+    Dim PartArray() As String
+    Dim Result() As Component2
+    Dim AsmIndex As Integer
+    Dim PartIndex As Integer
+    Dim I As Integer
+    Dim K As Variant
+    Dim Comp As Component2
+    Dim Doc As ModelDoc2
     
-    ReDim res(components.Count)
-    ReDim assemblies(components.Count)
-    ReDim parts(components.Count)
-    asmCount = -1
-    partCount = -1
-    For Each i In components.Keys
-        Set comp = components(i)
-        Set doc = comp.GetModelDoc2
-        If doc.GetType = swDocASSEMBLY Then
-            asmCount = asmCount + 1
-            assemblies(asmCount) = i
+    ReDim AsmArray(components.Count - 1)
+    AsmIndex = -1
+    ReDim PartArray(components.Count - 1)
+    PartIndex = -1
+    For Each K In components.Keys
+        Set Comp = components(K)
+        Set Doc = Comp.GetModelDoc2
+        If Doc.GetType = swDocASSEMBLY Then
+            AsmIndex = AsmIndex + 1
+            AsmArray(AsmIndex) = K
         Else
-            partCount = partCount + 1
-            parts(partCount) = i
+            PartIndex = PartIndex + 1
+            PartArray(PartIndex) = K
         End If
     Next
-    j = -1
-    If asmCount >= 0 Then
-        ReDim Preserve assemblies(asmCount)
-        SortArray assemblies
-        For asmCount = LBound(assemblies) To UBound(assemblies)
-            j = j + 1
-            res(j) = assemblies(asmCount)
+    
+    ReDim Result(components.Count - 1)
+    If AsmIndex >= 0 Then
+        ReDim Preserve AsmArray(AsmIndex)
+        SortArray AsmArray
+        For I = 0 To UBound(AsmArray)
+            Set Result(I) = components(AsmArray(I))
         Next
     End If
-    If partCount >= 0 Then
-        ReDim Preserve parts(partCount)
-        SortArray parts
-        For partCount = LBound(parts) To UBound(parts)
-            j = j + 1
-            res(j) = parts(partCount)
+    If PartIndex >= 0 Then
+        ReDim Preserve PartArray(PartIndex)
+        SortArray PartArray
+        For I = 0 To UBound(PartArray)
+            Set Result(AsmIndex + 1 + I) = components(PartArray(I))
         Next
     End If
-    SortAsmAndParts = res
+    SortAsmAndParts2 = Result
 End Function
 
 Sub ReorderComponents(currentAsm As AssemblyDoc, components As Dictionary)
-    Dim sortedKeys As Variant
-    Dim i As Integer
+    Dim SortedComps As Variant
     
-    sortedKeys = SortAsmAndParts(components)
-    For i = LBound(sortedKeys) + 1 To UBound(sortedKeys)
-        currentAsm.ReorderComponents components(sortedKeys(i)), components(sortedKeys(i - 1)), swReorderComponents_After
-    Next
+    SortedComps = SortAsmAndParts2(components)
+    currentAsm.ReorderComponents SortedComps, SortedComps(0), swReorderComponents_FirstInFolder
 End Sub
 
 Sub SortArray(ByRef arr As Variant)
     QuickSort arr, LBound(arr), UBound(arr)
 End Sub
 
-Sub QuickSort(ByRef arr As Variant, lowerBound As Integer, upperBound As Integer)
-    Dim pivot As Variant
-    Dim low As Integer
-    Dim high As Integer
-    Dim tmp As Variant
-
-    If upperBound <= lowerBound Then Exit Sub
-
-    pivot = arr(lowerBound \ 2 + upperBound \ 2)
-    low = lowerBound
-    high = upperBound
-
-    While low <= high
-        While arr(low) < pivot And low < upperBound
-            low = low + 1
-        Wend
-        While pivot < arr(high) And high > lowerBound
-            high = high - 1
-        Wend
-        If low <= high Then
-            tmp = arr(low)
-            arr(low) = arr(high)
-            arr(high) = tmp
-            low = low + 1
-            high = high - 1
-        End If
-    Wend
-
-    QuickSort arr, lowerBound, high
-    QuickSort arr, low, upperBound
-End Sub
