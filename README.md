@@ -1,4 +1,6 @@
-﻿# SortComponents
+This project has been moved to https://codeberg.org/e2t/sort-components
+ 
+ # SortComponents
 Макрос для сортування компонентів збірки SolidWorks в алфавітному порядку
 
 ### Зависимости
